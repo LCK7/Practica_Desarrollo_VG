@@ -153,11 +153,24 @@ public class UIManager : MonoBehaviour
 
     private void HandleTargetLost(GameObject @object)
     {
-        infoText.gameObject.SetActive(false);
+        // COMPROBACIÓN DE SEGURIDAD: Solo intentar interactuar si infoText está asignado
+        if (infoText != null) 
+        {
+            infoText.gameObject.SetActive(false);
+        }
+        else
+        {
+            // Opcional: registrar un error para recordar la asignación
+            Debug.LogError("UIManager: infoText no está asignado en el Inspector. Asigna tu TextMeshProUGUI.");
+        }
     }
 
     private void HandleTargetFocused(GameObject @object)
     {
-        infoText.gameObject.SetActive(true);
+        // COMPROBACIÓN DE SEGURIDAD: Solo intentar interactuar si infoText está asignado
+        if (infoText != null)
+        {
+            infoText.gameObject.SetActive(true);
+        }
     }
 }

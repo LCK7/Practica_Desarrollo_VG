@@ -6,6 +6,8 @@ public class FirstPersonController : MonoBehaviour
 {
     [Header("Movement Settings")]
     [SerializeField] private float _movementSpeed = 5.0f;
+    [SerializeField] private float _gravity = -19.62f; // Gravedad (ej: -9.81 * 2)
+
 
     [Header("Look Settings")]
     [SerializeField] private float _mouseSensitivity = 2.0f;
@@ -21,6 +23,10 @@ public class FirstPersonController : MonoBehaviour
     private Vector2 _lookInput;
     private float _xRotation = 0f;
 
+    // Variables nuevas para la gravedad
+    private float _velocityY;
+    private bool _isGrounded; 
+
     private void Awake()
     {
         _characterController = GetComponent<CharacterController>();
@@ -34,6 +40,7 @@ public class FirstPersonController : MonoBehaviour
 
         _inputActions = new PlayerInputActions();
     }
+    
     private void OnEnable()
     {
         _inputActions.Player.Enable();
@@ -42,6 +49,9 @@ public class FirstPersonController : MonoBehaviour
         _inputActions.Player.Move.canceled += OnMoveInput;
         _inputActions.Player.Look.performed += OnLookInput;
         _inputActions.Player.Look.canceled += OnLookInput;
+        
+        // Asumiendo que tienes una acción "Jump" configurada
+        // _inputActions.Player.Jump.performed += OnJumpInput; 
     }
 
     private void OnDisable()
@@ -50,14 +60,26 @@ public class FirstPersonController : MonoBehaviour
         _inputActions.Player.Move.canceled -= OnMoveInput;
         _inputActions.Player.Look.performed -= OnLookInput;
         _inputActions.Player.Look.canceled -= OnLookInput;
+        
+        // _inputActions.Player.Jump.performed -= OnJumpInput; 
 
         _inputActions.Player.Disable();
     }
+
     private void Update()
     {
+        HandleGravity(); // ¡NUEVO! Maneja la caída
         HandleMovement();
         HandleLook();
     }
+
+    // private void OnJumpInput(InputAction.CallbackContext context)
+    // {
+    //     if (_isGrounded)
+    //     {
+    //         _velocityY = Mathf.Sqrt(_jumpHeight * -2f * _gravity);
+    //     }
+    // }
 
     private void OnMoveInput(InputAction.CallbackContext context)
     {
@@ -69,12 +91,32 @@ public class FirstPersonController : MonoBehaviour
         _lookInput = context.ReadValue<Vector2>();
     }
 
+    private void HandleGravity()
+    {
+        _isGrounded = _characterController.isGrounded;
+
+        // Si estamos en el suelo, forzamos la velocidad de caída a un valor muy pequeño 
+        // para que no se acumule la gravedad, pero siga "pegado" al suelo.
+        if (_isGrounded && _velocityY < 0)
+        {
+            _velocityY = -2f; 
+        }
+
+        // Aplicar la gravedad continuamente
+        _velocityY += _gravity * Time.deltaTime;
+    }
+
     private void HandleMovement()
     {
-
+        // Movimiento horizontal (eje X y Z)
         Vector3 moveDirection = transform.forward * _moveInput.y + transform.right * _moveInput.x;
         
-        _characterController.Move(moveDirection * _movementSpeed * Time.deltaTime);
+        // Movimiento vertical (eje Y)
+        // Se añade la velocidad vertical (gravedad/salto) al vector de movimiento
+        moveDirection.y = _velocityY; 
+        
+        // Mover al CharacterController
+        _characterController.Move(moveDirection * Time.deltaTime * _movementSpeed);
     }
 
     private void HandleLook()
