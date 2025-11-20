@@ -8,6 +8,8 @@ public class TerminalController : MonoBehaviour, IInteractable
 
     public void Interact()
     {
+        Debug.Log("Terminal activado. Disparando evento con OnObjectiveActivated.");
+        GameEvents.TriggerObjectiveActivated();
 
         _isActive = !_isActive;
 
